@@ -13,12 +13,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
 
 export function Players() {
-  const { players, addPlayer, updatePlayer } = usePlayers()
+  const { players, addPlayer, updatePlayer, deletePlayer } = usePlayers()
   const { toast } = useToast()
   const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [editingPlayer, setEditingPlayer] = useState<string | null>(null)
+  const [deletingPlayer, setDeletingPlayer] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [avatar, setAvatar] = useState('')
@@ -70,6 +74,73 @@ export function Players() {
     }
   }
 
+  const handleEditClick = (player: typeof players[0]) => {
+    setEditingPlayer(player.id)
+    setName(player.name)
+    setNickname(player.nickname || '')
+    setAvatar(player.avatar || '')
+    setEditDialogOpen(true)
+  }
+
+  const handleEditPlayer = async () => {
+    if (!name.trim() || !editingPlayer) return
+
+    setLoading(true)
+    try {
+      await updatePlayer(editingPlayer, {
+        name: name.trim(),
+        nickname: nickname.trim() || undefined,
+        avatar: avatar.trim() || undefined,
+      })
+      toast({
+        title: 'Player updated',
+        description: `${name} has been updated`,
+      })
+      setName('')
+      setNickname('')
+      setAvatar('')
+      setEditingPlayer(null)
+      setEditDialogOpen(false)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update player',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteClick = (playerId: string) => {
+    setDeletingPlayer(playerId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeletePlayer = async () => {
+    if (!deletingPlayer) return
+
+    setLoading(true)
+    try {
+      const player = players.find((p) => p.id === deletingPlayer)
+      await deletePlayer(deletingPlayer)
+      toast({
+        title: 'Player removed',
+        description: `${player?.name || 'Player'} has been removed`,
+      })
+      setDeletingPlayer(null)
+      setDeleteDialogOpen(false)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove player',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-2 p-4 pb-20">
       <div className="flex items-center justify-between mb-4">
@@ -110,12 +181,30 @@ export function Players() {
                       {player.active ? 'Active' : 'Inactive'}
                     </div>
                   </div>
-                  <Switch
-                    checked={player.active}
-                    onCheckedChange={(checked) =>
-                      handleToggleActive(player.id, checked)
-                    }
-                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditClick(player)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteClick(player.id)}
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Switch
+                      checked={player.active}
+                      onCheckedChange={(checked) =>
+                        handleToggleActive(player.id, checked)
+                      }
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -157,7 +246,7 @@ export function Players() {
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Avatar URL
+                Avatar URL (optional)
               </label>
               <Input
                 value={avatar}
@@ -170,7 +259,12 @@ export function Players() {
             <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
-                onClick={() => setAddDialogOpen(false)}
+                onClick={() => {
+                  setAddDialogOpen(false)
+                  setName('')
+                  setNickname('')
+                  setAvatar('')
+                }}
                 disabled={loading}
               >
                 Cancel
@@ -182,6 +276,110 @@ export function Players() {
                 {loading ? 'Adding...' : 'Add Player'}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Player</DialogTitle>
+            <DialogDescription>
+              Update player information
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Name *
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Nickname
+              </label>
+              <Input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="JD"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Avatar URL (optional)
+              </label>
+              <Input
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                placeholder="https://..."
+                type="url"
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditDialogOpen(false)
+                  setEditingPlayer(null)
+                  setName('')
+                  setNickname('')
+                  setAvatar('')
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditPlayer}
+                disabled={!name.trim() || loading}
+              >
+                {loading ? 'Updating...' : 'Update Player'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Player</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove{' '}
+              {deletingPlayer
+                ? players.find((p) => p.id === deletingPlayer)?.name
+                : 'this player'}
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-2 justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setDeletingPlayer(null)
+              }}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePlayer}
+              disabled={loading}
+            >
+              {loading ? 'Removing...' : 'Remove Player'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

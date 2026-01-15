@@ -16,7 +16,7 @@ function App() {
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 className="text-xl font-bold">Ping Pong Rankings</h1>
+            <h1 className="text-xl font-bold">Lads Pong</h1>
             <ThemeToggle />
           </div>
         </header>

@@ -5,6 +5,7 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   Timestamp,
 } from 'firebase/firestore'
@@ -48,5 +49,9 @@ export function usePlayers() {
     await updateDoc(doc(db, 'players', id), updates)
   }
 
-  return { players, loading, addPlayer, updatePlayer }
+  const deletePlayer = async (id: string) => {
+    await deleteDoc(doc(db, 'players', id))
+  }
+
+  return { players, loading, addPlayer, updatePlayer, deletePlayer }
 }

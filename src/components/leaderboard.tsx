@@ -35,19 +35,33 @@ export function Leaderboard() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {stats.map((stat, index) => (
-            <Card
-              key={stat.player.id}
-              className="cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => setSelectedPlayerId(stat.player.id)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-bold">
-                      {index + 1}
+          {stats.map((stat, index) => {
+            const isTopThree = index < 3
+            const rankColors = [
+              'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-yellow-950 border-yellow-400',
+              'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-gray-950 border-gray-400',
+              'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-amber-50 border-amber-600',
+            ]
+            const rankColor = isTopThree ? rankColors[index] : 'bg-muted'
+            const rankBorder = isTopThree ? 'border-2' : 'border'
+
+            return (
+              <Card
+                key={stat.player.id}
+                className={`cursor-pointer hover:bg-accent transition-colors ${
+                  isTopThree ? 'shadow-lg' : ''
+                }`}
+                onClick={() => setSelectedPlayerId(stat.player.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${rankColor} ${rankBorder}`}
+                      >
+                        {index + 1}
+                      </div>
                     </div>
-                  </div>
                   <Avatar
                     src={stat.player.avatar}
                     name={stat.player.name}
@@ -90,7 +104,8 @@ export function Leaderboard() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            )
+          })}
         </div>
       )}
 
