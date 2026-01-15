@@ -36,7 +36,7 @@ export function Players() {
       await addPlayer({
         name: name.trim(),
         nickname: nickname.trim() || undefined,
-        avatar: avatar.trim() || undefined,
+        avatar: avatar.trim() ? avatar.trim() : undefined,
         active: true,
       })
       toast({
@@ -90,7 +90,7 @@ export function Players() {
       await updatePlayer(editingPlayer, {
         name: name.trim(),
         nickname: nickname.trim() || undefined,
-        avatar: avatar.trim() || undefined,
+        avatar: avatar.trim() ? avatar.trim() : undefined,
       })
       toast({
         title: 'Player updated',
@@ -252,7 +252,7 @@ export function Players() {
                 value={avatar}
                 onChange={(e) => setAvatar(e.target.value)}
                 placeholder="https://..."
-                type="url"
+                type="text"
               />
             </div>
 
@@ -320,7 +320,7 @@ export function Players() {
                 value={avatar}
                 onChange={(e) => setAvatar(e.target.value)}
                 placeholder="https://..."
-                type="url"
+                type="text"
               />
             </div>
 
