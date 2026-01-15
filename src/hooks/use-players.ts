@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   Timestamp,
+  deleteField,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Player } from '@/types'
@@ -39,14 +40,50 @@ export function usePlayers() {
   }, [])
 
   const addPlayer = async (player: Omit<Player, 'id' | 'createdAt'>) => {
-    await addDoc(collection(db, 'players'), {
-      ...player,
+    const playerData: Record<string, any> = {
+      name: player.name,
+      active: player.active,
       createdAt: Timestamp.now(),
-    })
+    }
+    
+    // Only include nickname if it's a non-empty string
+    if (player.nickname && player.nickname.trim()) {
+      playerData.nickname = player.nickname.trim()
+    }
+    
+    // Only include avatar if it's a non-empty string
+    if (player.avatar && player.avatar.trim()) {
+      playerData.avatar = player.avatar.trim()
+    }
+    
+    await addDoc(collection(db, 'players'), playerData)
   }
 
   const updatePlayer = async (id: string, updates: Partial<Player>) => {
-    await updateDoc(doc(db, 'players', id), updates)
+    const updateData: Record<string, any> = {}
+    
+    if (updates.name !== undefined) {
+      updateData.name = updates.name
+    }
+    if (updates.active !== undefined) {
+      updateData.active = updates.active
+    }
+    if (updates.nickname !== undefined) {
+      if (updates.nickname) {
+        updateData.nickname = updates.nickname
+      } else {
+        updateData.nickname = deleteField() // Remove field if empty
+      }
+    }
+    if (updates.avatar !== undefined) {
+      if (updates.avatar) {
+        updateData.avatar = updates.avatar
+      } else {
+        updateData.avatar = deleteField() // Remove field if empty
+      }
+    }
+    
+    await updateDoc(doc(db, 'players', id), updateData)
   }
 
   const deletePlayer = async (id: string) => {
