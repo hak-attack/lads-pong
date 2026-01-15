@@ -109,3 +109,4 @@ The app uses HashRouter for GitHub Pages compatibility. To deploy:
 ## License
 
 MIT
+
