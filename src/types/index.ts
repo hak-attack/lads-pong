@@ -11,6 +11,12 @@ export interface Match {
   id: string
   winnerId: string
   loserId: string
+  winnerScore: number // Last set score for winner
+  loserScore: number // Last set score for loser
+  setsWonByWinner: number // Total sets won by winner
+  setsWonByLoser: number // Total sets won by loser
+  numberOfSets: number // 3 or 5
+  scorePerSet: number // 11 or 21
   playedAt: Date
   createdBy: string
   status: 'completed'

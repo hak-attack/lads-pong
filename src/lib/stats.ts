@@ -26,6 +26,8 @@ export function calculatePlayerStats(
 
   let wins = 0
   let losses = 0
+  let gamesWon = 0
+  let gamesLost = 0
   let currentElo = INITIAL_ELO
   let streak = 0
   let lastResult: 'win' | 'loss' | null = null
@@ -41,6 +43,8 @@ export function calculatePlayerStats(
 
     if (isWinner) {
       wins++
+      gamesWon += match.setsWonByWinner
+      gamesLost += match.setsWonByLoser
       // Calculate Elo assuming opponent has INITIAL_ELO (simplified)
       // In a real system, you'd track opponent Elo at match time
       const opponentElo = INITIAL_ELO
@@ -55,6 +59,8 @@ export function calculatePlayerStats(
       lastResult = 'win'
     } else if (isLoser) {
       losses++
+      gamesWon += match.setsWonByLoser
+      gamesLost += match.setsWonByWinner
       const opponentElo = INITIAL_ELO
       const { newLoserElo } = calculateElo(opponentElo, currentElo)
       currentElo = newLoserElo
@@ -68,11 +74,15 @@ export function calculatePlayerStats(
     }
   }
 
-  const totalGames = wins + losses
-  const winPercentage = totalGames > 0 ? (wins / totalGames) * 100 : 0
+  const totalGames = gamesWon + gamesLost
+  const winPercentage = totalGames > 0 ? (gamesWon / totalGames) * 100 : 0
 
   // Calculate odds vs field average
-  // Simplified: odds = playerElo / averageElo
+  // Using inverted power function to make odds more sensitive to Elo changes
+  // Formula: odds = (averageElo / playerElo)^5
+  // Better players (higher Elo) = lower odds (favorites)
+  // Worse players (lower Elo) = higher odds (underdogs)
+  // Power of 5 provides strong sensitivity without being extreme
   const allPlayers = new Set<string>()
   matches.forEach((m) => {
     allPlayers.add(m.winnerId)
@@ -82,7 +92,9 @@ export function calculatePlayerStats(
   // For simplicity, assume average Elo is INITIAL_ELO
   // In production, calculate actual average from all players
   const averageElo = INITIAL_ELO
-  const odds = averageElo > 0 ? currentElo / averageElo : 1
+  const baseRatio = currentElo > 0 ? averageElo / currentElo : 1
+  // Apply power function to make odds change more drastically (power of 5 for strong sensitivity)
+  const odds = Math.pow(baseRatio, 5)
 
   return {
     wins,

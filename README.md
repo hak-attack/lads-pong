@@ -70,6 +70,8 @@ A mobile-first table tennis scorekeeping web app built with React, TypeScript, V
 ### `matches`
 - `winnerId` (string, required)
 - `loserId` (string, required)
+- `winnerScore` (number, default: 3) - Games won by winner
+- `loserScore` (number, default: 0) - Games won by loser
 - `playedAt` (timestamp)
 - `createdBy` (string - user ID)
 - `status` (string, default: "completed")
@@ -83,8 +85,10 @@ A mobile-first table tennis scorekeeping web app built with React, TypeScript, V
 
 ### Matches
 - Reverse chronological list of all matches
-- Shows winner, loser, and time since match
+- Shows winner, loser, final score, and time since match
+- Edit game scores for any match
 - Delete matches to support undo functionality
+- Score changes automatically update leaderboard statistics
 
 ### Players
 - Add new players with name, nickname, and avatar URL
@@ -94,8 +98,8 @@ A mobile-first table tennis scorekeeping web app built with React, TypeScript, V
 ## Stats Calculation
 
 - **Elo Rating**: Starts at 1500, updates after each match using standard Elo formula (K=32)
-- **Win Percentage**: (Wins / Total Games) × 100
-- **Streak**: Current consecutive wins (positive) or losses (negative)
+- **Win Percentage**: (Games Won / Total Games Played) × 100 - Calculated based on individual game scores, not just match wins
+- **Streak**: Current consecutive match wins (positive) or losses (negative)
 - **Odds**: Player Elo / Average Elo (simplified calculation)
 
 ## Deployment

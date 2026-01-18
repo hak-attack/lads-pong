@@ -6,20 +6,23 @@ import { BottomSheet } from '@/components/bottom-sheet'
 import { Avatar } from '@/components/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { AddWinDialog } from '@/components/add-win-dialog'
-import { AddLossDialog } from '@/components/add-loss-dialog'
-import { Trophy, TrendingUp, TrendingDown } from 'lucide-react'
+import { AddWinForm } from '@/components/add-win-form'
+import { AddLossForm } from '@/components/add-loss-form'
+import { LeaderboardSkeleton } from '@/components/leaderboard-skeleton'
+import { Trophy, TrendingUp, TrendingDown, Target, Award, BarChart3, Zap } from 'lucide-react'
+
+type FormType = 'win' | 'loss' | null
 
 export function Leaderboard() {
-  const { players } = usePlayers()
-  const { matches } = useMatches()
+  const { players, loading: playersLoading } = usePlayers()
+  const { matches, loading: matchesLoading } = useMatches()
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
-  const [dialogPlayerId, setDialogPlayerId] = useState<string | null>(null)
-  const [addWinOpen, setAddWinOpen] = useState(false)
-  const [addLossOpen, setAddLossOpen] = useState(false)
+  const [formType, setFormType] = useState<FormType>(null)
 
+  const isLoading = playersLoading || matchesLoading
   const stats = calculateAllStats(players, matches)
   const selectedPlayer = stats.find((s) => s.player.id === selectedPlayerId)
+  const isExpanded = formType !== null
 
   return (
     <div className="space-y-2 p-4 pb-20">
@@ -27,7 +30,9 @@ export function Leaderboard() {
         <h1 className="text-2xl font-bold">Leaderboard</h1>
       </div>
 
-      {stats.length === 0 ? (
+      {isLoading ? (
+        <LeaderboardSkeleton />
+      ) : stats.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
             No players yet. Add players to get started!
@@ -111,90 +116,185 @@ export function Leaderboard() {
 
       <BottomSheet
         open={selectedPlayerId !== null}
-        onOpenChange={(open) => !open && setSelectedPlayerId(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedPlayerId(null)
+            setFormType(null)
+          }
+        }}
+        expanded={isExpanded}
+        showBackButton={isExpanded}
+        onBack={() => setFormType(null)}
       >
         {selectedPlayer && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Avatar
-                src={selectedPlayer.player.avatar}
-                name={selectedPlayer.player.name}
-                size="lg"
-              />
-              <div>
-                <h2 className="text-xl font-bold">{selectedPlayer.player.name}</h2>
-                {selectedPlayer.player.nickname && (
-                  <p className="text-muted-foreground">
-                    {selectedPlayer.player.nickname}
-                  </p>
-                )}
-              </div>
-            </div>
+          <>
+            {formType === null ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={selectedPlayer.player.avatar}
+                      name={selectedPlayer.player.name}
+                      size="lg"
+                    />
+                    <div>
+                      <h2 className="text-xl font-bold">{selectedPlayer.player.name}</h2>
+                      {selectedPlayer.player.nickname && (
+                        <p className="text-muted-foreground">
+                          {selectedPlayer.player.nickname}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      onClick={() => setFormType('win')}
+                      size="sm"
+                      className="px-3 h-12"
+                    >
+                      Add Win
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setFormType('loss')}
+                      size="sm"
+                      className="px-3 h-12"
+                    >
+                      Add Loss
+                    </Button>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => {
-                setDialogPlayerId(selectedPlayer.player.id)
-                setSelectedPlayerId(null)
-                setAddWinOpen(true)
-              }}>
-                Add Win
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDialogPlayerId(selectedPlayer.player.id)
+                <div className="grid grid-cols-4 gap-1.5 pt-4">
+                  {/* Record Card */}
+                  <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+                    <CardContent className="p-2 flex flex-col">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="p-1 rounded-lg bg-blue-500/10 dark:bg-blue-400/20">
+                          <Target className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <p className="text-[9px] font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+                          Record
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold text-blue-900 dark:text-blue-100 mb-1">
+                        {selectedPlayer.wins}-{selectedPlayer.losses}
+                      </p>
+                      <div className="flex items-center gap-1 text-[9px] text-blue-600 dark:text-blue-400 mt-auto">
+                        <span className="font-medium text-green-600 dark:text-green-400">
+                          {selectedPlayer.wins}W
+                        </span>
+                        <span className="text-blue-400">•</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
+                          {selectedPlayer.losses}L
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Win % Card */}
+                  <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border-green-200 dark:border-green-800">
+                    <CardContent className="p-2 flex flex-col">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="p-1 rounded-lg bg-green-500/10 dark:bg-green-400/20">
+                          <BarChart3 className="h-3 w-3 text-green-600 dark:text-green-400" />
+                        </div>
+                        <p className="text-[9px] font-medium text-green-700 dark:text-green-300 uppercase tracking-wide">
+                          Win %
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold text-green-900 dark:text-green-100 mb-1">
+                        {selectedPlayer.winPercentage}%
+                      </p>
+                      <div className="w-full bg-green-200 dark:bg-green-900/50 rounded-full h-1 overflow-hidden mt-auto flex items-end min-h-[14px]">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-500 to-green-600 dark:from-green-400 dark:to-green-500 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(selectedPlayer.winPercentage, 100)}%` }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Elo Card */}
+                  <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-amber-200 dark:border-amber-800">
+                    <CardContent className="p-2 flex flex-col">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="p-1 rounded-lg bg-amber-500/10 dark:bg-amber-400/20">
+                          <Award className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <p className="text-[9px] font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                          Elo
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-1">
+                        {selectedPlayer.elo}
+                      </p>
+                      <div className="flex items-center gap-0.5 text-[9px] text-amber-600 dark:text-amber-400 mt-auto">
+                        <Trophy className="h-2 w-2" />
+                        <span>
+                          {selectedPlayer.elo >= 1600
+                            ? 'Expert'
+                            : selectedPlayer.elo >= 1500
+                            ? 'Advanced'
+                            : selectedPlayer.elo >= 1400
+                            ? 'Intermediate'
+                            : 'Beginner'}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Odds Card */}
+                  <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
+                    <CardContent className="p-2 flex flex-col">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="p-1 rounded-lg bg-purple-500/10 dark:bg-purple-400/20">
+                          <Zap className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <p className="text-[9px] font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                          Odds
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold text-purple-900 dark:text-purple-100 mb-1">
+                        {selectedPlayer.odds.toFixed(2)}x
+                      </p>
+                      <div className="text-[9px] text-purple-600 dark:text-purple-400 mt-auto">
+                        <span>
+                          {selectedPlayer.odds <= 0.8
+                            ? 'Strong Favourite'
+                            : selectedPlayer.odds <= 1.0
+                            ? 'Favourite'
+                            : selectedPlayer.odds <= 1.2
+                            ? 'Underdog'
+                            : 'Long Shot'}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : formType === 'win' ? (
+              <AddWinForm
+                playerId={selectedPlayer.player.id}
+                onSuccess={() => {
+                  setFormType(null)
                   setSelectedPlayerId(null)
-                  setAddLossOpen(true)
                 }}
-              >
-                Add Loss
-              </Button>
-            </div>
-
-            <div className="space-y-2 pt-4 border-t">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Record</span>
-                <span className="font-semibold">
-                  {selectedPlayer.wins}-{selectedPlayer.losses}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Win %</span>
-                <span className="font-semibold">
-                  {selectedPlayer.winPercentage}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Elo</span>
-                <span className="font-semibold">{selectedPlayer.elo}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Odds</span>
-                <span className="font-semibold">
-                  {selectedPlayer.odds.toFixed(2)}x
-                </span>
-              </div>
-            </div>
-          </div>
+                onCancel={() => setFormType(null)}
+              />
+            ) : (
+              <AddLossForm
+                playerId={selectedPlayer.player.id}
+                onSuccess={() => {
+                  setFormType(null)
+                  setSelectedPlayerId(null)
+                }}
+                onCancel={() => setFormType(null)}
+              />
+            )}
+          </>
         )}
       </BottomSheet>
-
-      <AddWinDialog
-        open={addWinOpen}
-        onOpenChange={(open) => {
-          setAddWinOpen(open)
-          if (!open) setDialogPlayerId(null)
-        }}
-        playerId={dialogPlayerId || ''}
-      />
-      <AddLossDialog
-        open={addLossOpen}
-        onOpenChange={(open) => {
-          setAddLossOpen(open)
-          if (!open) setDialogPlayerId(null)
-        }}
-        playerId={dialogPlayerId || ''}
-      />
     </div>
   )
 }

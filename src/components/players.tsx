@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/avatar'
+import { PlayersSkeleton } from '@/components/players-skeleton'
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,7 @@ import { Switch } from '@/components/ui/switch'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 
 export function Players() {
-  const { players, addPlayer, updatePlayer, deletePlayer } = usePlayers()
+  const { players, loading, addPlayer, updatePlayer, deletePlayer } = usePlayers()
   const { toast } = useToast()
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -26,12 +27,12 @@ export function Players() {
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [avatar, setAvatar] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
 
   const handleAddPlayer = async () => {
     if (!name.trim()) return
 
-    setLoading(true)
+    setActionLoading(true)
     try {
       await addPlayer({
         name: name.trim(),
@@ -54,7 +55,7 @@ export function Players() {
         variant: 'destructive',
       })
     } finally {
-      setLoading(false)
+      setActionLoading(false)
     }
   }
 
@@ -85,7 +86,7 @@ export function Players() {
   const handleEditPlayer = async () => {
     if (!name.trim() || !editingPlayer) return
 
-    setLoading(true)
+    setActionLoading(true)
     try {
       await updatePlayer(editingPlayer, {
         name: name.trim(),
@@ -108,7 +109,7 @@ export function Players() {
         variant: 'destructive',
       })
     } finally {
-      setLoading(false)
+      setActionLoading(false)
     }
   }
 
@@ -120,7 +121,7 @@ export function Players() {
   const handleDeletePlayer = async () => {
     if (!deletingPlayer) return
 
-    setLoading(true)
+    setActionLoading(true)
     try {
       const player = players.find((p) => p.id === deletingPlayer)
       await deletePlayer(deletingPlayer)
@@ -137,7 +138,7 @@ export function Players() {
         variant: 'destructive',
       })
     } finally {
-      setLoading(false)
+      setActionLoading(false)
     }
   }
 
@@ -151,7 +152,9 @@ export function Players() {
         </Button>
       </div>
 
-      {players.length === 0 ? (
+      {loading ? (
+        <PlayersSkeleton />
+      ) : players.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
             No players yet. Add your first player to get started!
@@ -265,15 +268,15 @@ export function Players() {
                   setNickname('')
                   setAvatar('')
                 }}
-                disabled={loading}
+                disabled={actionLoading}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddPlayer}
-                disabled={!name.trim() || loading}
+                disabled={!name.trim() || actionLoading}
               >
-                {loading ? 'Adding...' : 'Add Player'}
+                {actionLoading ? 'Adding...' : 'Add Player'}
               </Button>
             </div>
           </div>
@@ -334,15 +337,15 @@ export function Players() {
                   setNickname('')
                   setAvatar('')
                 }}
-                disabled={loading}
+                disabled={actionLoading}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleEditPlayer}
-                disabled={!name.trim() || loading}
+                disabled={!name.trim() || actionLoading}
               >
-                {loading ? 'Updating...' : 'Update Player'}
+                {actionLoading ? 'Updating...' : 'Update Player'}
               </Button>
             </div>
           </div>
@@ -369,16 +372,16 @@ export function Players() {
                 setDeleteDialogOpen(false)
                 setDeletingPlayer(null)
               }}
-              disabled={loading}
+              disabled={actionLoading}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeletePlayer}
-              disabled={loading}
+              disabled={actionLoading}
             >
-              {loading ? 'Removing...' : 'Remove Player'}
+              {actionLoading ? 'Removing...' : 'Remove Player'}
             </Button>
           </div>
         </DialogContent>
