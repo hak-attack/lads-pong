@@ -6,29 +6,39 @@ import { BottomSheet } from '@/components/bottom-sheet'
 import { Avatar } from '@/components/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { AddWinForm } from '@/components/add-win-form'
-import { AddLossForm } from '@/components/add-loss-form'
+import { AddMatchDialog } from '@/components/add-match-dialog'
 import { LeaderboardSkeleton } from '@/components/leaderboard-skeleton'
-import { Trophy, TrendingUp, TrendingDown, Target, Award, BarChart3, Zap } from 'lucide-react'
-
-type FormType = 'win' | 'loss' | null
+import { Trophy, TrendingUp, TrendingDown, Target, Award, BarChart3, Zap, Plus } from 'lucide-react'
 
 export function Leaderboard() {
   const { players, loading: playersLoading } = usePlayers()
   const { matches, loading: matchesLoading } = useMatches()
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
-  const [formType, setFormType] = useState<FormType>(null)
+  const [addMatchDialogOpen, setAddMatchDialogOpen] = useState(false)
 
   const isLoading = playersLoading || matchesLoading
   const stats = calculateAllStats(players, matches)
   const selectedPlayer = stats.find((s) => s.player.id === selectedPlayerId)
-  const isExpanded = formType !== null
 
   return (
     <div className="space-y-2 p-4 pb-20">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Leaderboard</h1>
       </div>
+
+      {/* Floating Action Button */}
+      <Button
+        onClick={() => setAddMatchDialogOpen(true)}
+        className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-50 p-0"
+        size="icon"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+
+      <AddMatchDialog
+        open={addMatchDialogOpen}
+        onOpenChange={setAddMatchDialogOpen}
+      />
 
       {isLoading ? (
         <LeaderboardSkeleton />
@@ -119,51 +129,26 @@ export function Leaderboard() {
         onOpenChange={(open) => {
           if (!open) {
             setSelectedPlayerId(null)
-            setFormType(null)
           }
         }}
-        expanded={isExpanded}
-        showBackButton={isExpanded}
-        onBack={() => setFormType(null)}
       >
         {selectedPlayer && (
-          <>
-            {formType === null ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={selectedPlayer.player.avatar}
-                      name={selectedPlayer.player.name}
-                      size="lg"
-                    />
-                    <div>
-                      <h2 className="text-xl font-bold">{selectedPlayer.player.name}</h2>
-                      {selectedPlayer.player.nickname && (
-                        <p className="text-muted-foreground">
-                          {selectedPlayer.player.nickname}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      onClick={() => setFormType('win')}
-                      size="sm"
-                      className="px-3 h-12"
-                    >
-                      Add Win
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setFormType('loss')}
-                      size="sm"
-                      className="px-3 h-12"
-                    >
-                      Add Loss
-                    </Button>
-                  </div>
-                </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Avatar
+                src={selectedPlayer.player.avatar}
+                name={selectedPlayer.player.name}
+                size="lg"
+              />
+              <div>
+                <h2 className="text-xl font-bold">{selectedPlayer.player.name}</h2>
+                {selectedPlayer.player.nickname && (
+                  <p className="text-muted-foreground">
+                    {selectedPlayer.player.nickname}
+                  </p>
+                )}
+              </div>
+            </div>
 
                 <div className="grid grid-cols-4 gap-1.5 pt-4">
                   {/* Record Card */}
@@ -272,27 +257,7 @@ export function Leaderboard() {
                     </CardContent>
                   </Card>
                 </div>
-              </div>
-            ) : formType === 'win' ? (
-              <AddWinForm
-                playerId={selectedPlayer.player.id}
-                onSuccess={() => {
-                  setFormType(null)
-                  setSelectedPlayerId(null)
-                }}
-                onCancel={() => setFormType(null)}
-              />
-            ) : (
-              <AddLossForm
-                playerId={selectedPlayer.player.id}
-                onSuccess={() => {
-                  setFormType(null)
-                  setSelectedPlayerId(null)
-                }}
-                onCancel={() => setFormType(null)}
-              />
-            )}
-          </>
+          </div>
         )}
       </BottomSheet>
     </div>
