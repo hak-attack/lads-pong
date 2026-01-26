@@ -4,7 +4,7 @@ export function MatchesSkeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 5 }).map((_, index) => (
-        <Card key={index}>
+        <Card key={index} className="border-0">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1 min-w-0">

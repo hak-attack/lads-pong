@@ -16,6 +16,16 @@ export function useTheme() {
     root.classList.remove('light', 'dark')
     root.classList.add(theme)
     localStorage.setItem('theme', theme)
+    
+    // Update theme-color meta tag for iOS status bar
+    const updateThemeColor = () => {
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', theme === 'dark' ? '#2d2d2d' : '#f7f7f7')
+      }
+    }
+    
+    updateThemeColor()
   }, [theme])
 
   const toggleTheme = () => {

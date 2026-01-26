@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Trash2, Trophy, Edit } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { getFadeInDelayClass } from '@/lib/utils'
 import type { Match } from '@/types'
 
 export function Matches() {
@@ -192,21 +193,22 @@ export function Matches() {
       {isLoading ? (
         <MatchesSkeleton />
       ) : matches.length === 0 ? (
-        <Card>
+        <Card className="animate-fade-in-up-delay-1 border-0">
           <CardContent className="p-6 text-center text-muted-foreground">
             No matches yet. Record some games to see them here!
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          {matches.map((match) => {
+          {matches.map((match, index) => {
+            const delayClass = getFadeInDelayClass(index + 1)
             const winner = getPlayer(match.winnerId)
             const loser = getPlayer(match.loserId)
 
             if (!winner || !loser) return null
 
             return (
-              <Card key={match.id}>
+              <Card key={match.id} className={`${delayClass} border-0`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">

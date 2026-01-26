@@ -4,7 +4,7 @@ export function PlayersSkeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 5 }).map((_, index) => (
-        <Card key={index}>
+        <Card key={index} className="border-0">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-muted/60 animate-pulse" />
